@@ -758,6 +758,8 @@ classdef hNRGNBPhy < hNRPhyInterface
             endSample = sum(symbolLengths(1:obj.CurrSymbol+numTxSymbols));
             txWaveform = txWaveform(startSample:endSample, :);
             
+            % spectrogram(txWaveform,ones(obj.WaveformInfoDL.Nfft,1),0,obj.WaveformInfoDL.Nfft,'centered',obj.WaveformInfoDL.SampleRate,'yaxis','MinThreshold',-130)
+
             % Signal amplitude. Account for FFT occupancy factor if grid is
             % not fully occupied.
             signalAmp = db2mag(obj.TxPower-30)*sqrt(obj.WaveformInfoDL.Nfft^2/(size(txGrid, 1)*obj.NumTxAnts));

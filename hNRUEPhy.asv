@@ -642,11 +642,6 @@ classdef hNRUEPhy < hNRPhyInterface
             
             % OFDM modulation
             txWaveform = nrOFDMModulate(carrier, txSlotGrid);
-            global pulse 
-            global pulON
-            if pulON
-                txWaveform = pulse+txWaveform ;
-            end
             
             % Trim txWaveform to span only the transmission symbols
             slotNumSubFrame = mod(obj.CurrSlot, obj.WaveformInfoUL.SlotsPerSubframe);
