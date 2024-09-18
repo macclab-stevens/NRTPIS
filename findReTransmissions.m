@@ -22,6 +22,6 @@ function simulationLogs = findReTransmissions(simulationLogs)
     end
     simulationLogs{2, 1} = "numReTxDL";
     simulationLogs{3, 1} = "numReTxUL";
-    simulationLogs{2, 2} = numReTxDL
-    simulationLogs{3, 2} = numReTxUL
+    simulationLogs{2, 2} = numReTxDL;
+    simulationLogs{3, 2} = numReTxUL;
 end 

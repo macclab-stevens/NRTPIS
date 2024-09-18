@@ -76,7 +76,8 @@ classdef hNRSchedulerStaticMCS < hNRScheduler
                         % of this RBG
                         selectedUE = schedulerInput.eligibleUEs(index);
                         mcsIndex = schedulerInput.mcsRBG(index, 1);
-                        mcsIndex = 10;
+                        global staticMCS;
+                        mcsIndex = staticMCS;
                         fprintf("Selected UE: %d | mcsIndex: %d  \n",selectedUE,mcsIndex)
 
                         break;
