@@ -978,6 +978,7 @@ classdef hNRGNBPhy < hNRPhyInterface
             % Check if channel model is specified between gNB and a particular UE
             if isfield(pktInfo, 'RNTI') && pktInfo.NCellID == obj.CellConfig.NCellID && ~isempty(obj.ChannelModel{pktInfo.RNTI}) 
                 waveform = [waveform; zeros(obj.MaxChannelDelay(pktInfo.RNTI), size(waveform,2))];
+                release(obj.ChannelModel{pktInfo.RNTI})
                 obj.ChannelModel{pktInfo.RNTI}.InitialTime = 1e-9*currentTime; % seconds
                 waveform = obj.ChannelModel{pktInfo.RNTI}(waveform);
             else

@@ -1,5 +1,7 @@
 
 getReTx('/Users/ericforbes/Documents/GitHub/NRTPIS/Results/MCSwalk_0918/240918-064045/240918-064045_simulationMetrics.mat')
+getReTx('/Users/ericforbes/Documents/GitHub/NRTPIS/Results/MCSwalk_0918/240918-064045/240918-064045_simulationMetrics.mat')
+
 getParamFileNames()
 
 

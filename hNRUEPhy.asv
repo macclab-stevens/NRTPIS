@@ -320,9 +320,10 @@ classdef hNRUEPhy < hNRPhyInterface
             end
             
             if isfield(param, 'ChannelModel')
-                obj.ChannelModel = param.ChannelModel;
-                chInfo = info(obj.ChannelModel);
-                obj.MaxChannelDelay = chInfo.MaximumChannelDelay;
+                obj.ChannelModel = param.ChannelModel{1};
+                chInfo = obj.ChannelModel;
+                % obj.MaxChannelDelay = chInfo.MaximumChannelDelay;
+                obj.MaxChannelDelay = 16;
             end
             
             % Set receiver noise figure
@@ -642,6 +643,11 @@ classdef hNRUEPhy < hNRPhyInterface
             
             % OFDM modulation
             txWaveform = nrOFDMModulate(carrier, txSlotGrid);
+            global pulse 
+            global pulON
+            if pulON
+                txWaveform = pulse+txWaveform ;
+            end
             
             % Trim txWaveform to span only the transmission symbols
             slotNumSubFrame = mod(obj.CurrSlot, obj.WaveformInfoUL.SlotsPerSubframe);
@@ -843,6 +849,7 @@ classdef hNRUEPhy < hNRPhyInterface
             % Check if channel model is specified between UE and its gNB
             if ~isempty(obj.ChannelModel) && pktInfo.NCellID == obj.CellConfig.NCellID && ~isfield(pktInfo, 'RNTI')
                 rxWaveform = [rxWaveform; zeros(obj.MaxChannelDelay, size(rxWaveform,2))];
+                release(obj.ChannelModel.I
                 obj.ChannelModel.InitialTime = 1e-9*currentTime; % seconds
                 rxWaveform = obj.ChannelModel(rxWaveform);
             else

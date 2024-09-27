@@ -1,7 +1,8 @@
-function simulationLogs = findReTransmissions(simulationLogs)
+function simulationLogs = findReTransmissions(simulationLogs,simParameters)
     simTable = simulationLogs{1, 1}.SchedulingAssignmentLogs();
-    numReTxDL =  [0 0 0 0];
-    numReTxUL = [0 0 0 0];
+    numReTxDL =  zeros(simParameters.NumUEs,1);
+    numReTxUL = zeros(simParameters.NumUEs,1);
+    avgMCS = zeros(simParameters.NumUEs,1);
     [rows, cols] = size(simTable);
     fprintf("Rows:%d Cols:%d\n",rows,cols);
     for i = 2:rows-1
@@ -20,8 +21,19 @@ function simulationLogs = findReTransmissions(simulationLogs)
             numReTxUL(rnti) = numReTxUL(rnti)+ 1;
         end
     end
-    simulationLogs{2, 1} = "numReTxDL";
-    simulationLogs{3, 1} = "numReTxUL";
-    simulationLogs{2, 2} = numReTxDL;
-    simulationLogs{3, 2} = numReTxUL;
+
+    %find Avg MCS
+    a = cell2mat(simTable(2:end,1))
+    unique(a)
+
+    %add analysis back to logs
+    simulationLogs{end+1, 1} = "numReTxDL";
+    simulationLogs{end, 2} = numReTxDL;
+
+    simulationLogs{end+1, 1} = "numReTxUL";
+    simulationLogs{end, 2} = numReTxUL;
+    simulationLogs{end+1,1} = 'avgMcs';
+    simulationLogs{end,2} = avgMCS;
+
+    disp(simulationLogs);
 end 
