@@ -849,8 +849,8 @@ classdef hNRUEPhy < hNRPhyInterface
             % Check if channel model is specified between UE and its gNB
             if ~isempty(obj.ChannelModel) && pktInfo.NCellID == obj.CellConfig.NCellID && ~isfield(pktInfo, 'RNTI')
                 rxWaveform = [rxWaveform; zeros(obj.MaxChannelDelay, size(rxWaveform,2))];
-                release(obj.ChannelModel)
-                obj.ChannelModel.InitialTime = 1e-9*currentTime; % seconds
+                % release(obj.ChannelModel)
+                % obj.ChannelModel.InitialTime = 1e-9*currentTime; % seconds
                 rxWaveform = obj.ChannelModel(rxWaveform);
             else
                 % Channel matrix to map the waveform from NumTxAnts to
