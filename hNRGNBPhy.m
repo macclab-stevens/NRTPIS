@@ -747,7 +747,7 @@ classdef hNRGNBPhy < hNRPhyInterface
             if pulON
                 txWaveform = pulse+txWaveform ;
             end
-            % spectrogram(txWaveform,ones(obj.WaveformInfoDL.Nfft,1),0,obj.WaveformInfoDL.Nfft,'centered',obj.WaveformInfoDL.SampleRate,'yaxis','MinThreshold',-130)
+            spectrogram(txWaveform,ones(obj.WaveformInfoDL.Nfft,1),0,obj.WaveformInfoDL.Nfft,'centered',obj.WaveformInfoDL.SampleRate,'yaxis','MinThreshold',-130)
 
             % Trim txWaveform to span only the transmission symbols
             slotNumSubFrame = mod(obj.CurrSlot, obj.WaveformInfoDL.SlotsPerSubframe);

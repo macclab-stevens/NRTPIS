@@ -1,4 +1,4 @@
-function mainFunc(schStrat)
+function mainFunc(simParameters)
 %effectivly the same as Main but calling it with a different static MCS
 %each time
 
@@ -9,17 +9,25 @@ function mainFunc(schStrat)
 wirelessnetworkSupportPackageCheck
 % Configure simulation parameters in the simParameters structure.
 rng('default'); % Reset the random number generator
-simParameters = []; % Clear simParameters variable
-simParameters.NumFramesSim = 10; % Simulation time in terms of number of 10 ms frames (100 = 10s
+% simParameters = []; % Clear simParameters variable
+% simParameters.NumFramesSim = 10; % Simulation time in terms of number of 10 ms frames (100 = 10s
 simParameters.SchedulingType = 1; % Set the value to 0 (slot-based scheduling) or 1 (symbol-based scheduling)
 % Specify the number of UEs in the cell, assuming that UEs have sequential radio network temporary identifiers (RNTIs) from 1 to simParameters.NumUEs. If you change the number of UEs, ensure that the number of rows in simParameters.UEPosition parameter equals to the value of simParameters.NumUEs.
-simParameters.NumUEs = 1;
+% simParameters.NumUEs = 1;
 % Assign position to the UEs assuming that the gNB is at (0, 0, 0). N-by-3
 % matrix where 'N' is the number of UEs. Each row has (x, y, z) position of a
 % UE (in meters)
-simParameters.UEPosition = [100 0 0];% Validate the UE positions
+% simParameters.UEPosition = [500 0 0];% Validate the UE positions
 validateattributes(simParameters.UEPosition,{'numeric'},{'nonempty','real','nrows',simParameters.NumUEs,'ncols',3, ...
     'finite'},'simParameters.UEPosition','UEPosition');
+
+% Application traffic configuration
+% Set the periodic DL and UL application traffic pattern for UEs.
+% Set the periodic DL and UL application traffic pattern for UEs
+% simParameters.dlAppDataRate = 16e4*ones(simParameters.NumUEs,1); % DL application data rate in kilo bits per second (kbps)
+% simParameters.dlAppDataRate = [10e3];
+% simParameters.ulAppDataRate = [10e3];
+
 %% 
 
 % Set the channel bandwidth to 5 MHz and the subcarrier spacing (SCS) to 15 kHz as defined in 3GPP TS 38.104 Section 5.3.2. The complete bandwidth is assumed to be allotted for PUSCH or PDSCH.
@@ -40,10 +48,10 @@ simParameters.NumULSlots = 2; % Number of consecutive full UL slots at the end o
 %% 
 
 % Specify the scheduling strategy, the time domain resource assignment granualarity and the maximum limit on the RBs allotted for PDSCH and PUSCH. The time domain resource assignment granualarity is applicable only for symbol-based scheduling. If the number of symbols (DL or UL) are less than the configured time domain resource assignment granularity, then a smaller valid granularity is chosen. For slot-based scheduling, biggest possible granularity in a slot is chosen. The RB transmission limit applies only to new transmissions and not to the retransmissions.
-simParameters.SchedulerStrategy = schStrat; % Supported scheduling strategies: 'PF', 'RR' and 'BestCQI'
+simParameters.SchedulerStrategy = simParameters.schStrat; % Supported scheduling strategies: 'PF', 'RR' and 'BestCQI'
 global staticMCS ;
 staticMCS = 0;
-if strcmp(schStrat,'staticMCS')
+if strcmp(simParameters.schStrat,'staticMCS')
     staticMCS = mcsInt;
 end
 simParameters.TTIGranularity = 4;
@@ -77,12 +85,7 @@ simParameters.PDSCHDMRSAdditionalPosTypeB = 0;
 simParameters.PDSCHDMRSAdditionalPosTypeA = 0;
 simParameters.PDSCHDMRSConfigurationType = 1;
 %% 
-% Application traffic configuration
-% Set the periodic DL and UL application traffic pattern for UEs.
-% Set the periodic DL and UL application traffic pattern for UEs
-% simParameters.dlAppDataRate = 16e4*ones(simParameters.NumUEs,1); % DL application data rate in kilo bits per second (kbps)
-simParameters.dlAppDataRate = [10e3];
-simParameters.ulAppDataRate = [10e3];
+
 
 % simParameters.ulAppDataRate = 16e4*ones(simParameters.NumUEs,1); % UL application data rate in kbps
 % Validate the DL application data rate
