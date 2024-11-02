@@ -1,4 +1,4 @@
-function simulationLogs = findReTransmissions(simulationLogs,simParameters)
+function resultsTable = findReTransmissions(simulationLogs,simParameters)
     simTable = simulationLogs{1, 1}.SchedulingAssignmentLogs();
     numReTxDL =  zeros(simParameters.NumUEs,1);
     numReTxUL = zeros(simParameters.NumUEs,1);
@@ -48,22 +48,40 @@ function simulationLogs = findReTransmissions(simulationLogs,simParameters)
     
     % Step 4: Filter retransmissions ('TxType' == 'reTx')
     reTxData = T(T.TxType == "reTx", :);
-    
+    dlTotal = T(T.GrantType == "DL", :);
+    ulTotal = T(T.GrantType == "UL", :);
+    dlNew = dlTotal(dlTotal.TxType == "newTx", :);
+    ulNew = ulTotal(ulTotal.TxType == "newTx", :);
+
     % Step 5: Separate retransmissions by 'DL' and 'UL' based on 'GrantType'
     reTxData_DL = reTxData(reTxData.GrantType == "DL", :);
     reTxData_UL = reTxData(reTxData.GrantType == "UL", :);
     
     % Step 6: Group retransmissions by 'RNTI' and 'GrantType'
     
+
+    
+    
+
     % For DL retransmissions
     [groups_DL, RNTIs_DL] = findgroups(reTxData_DL.RNTI);
     numReTx_DL = splitapply(@numel, reTxData_DL.TxType, groups_DL);
     avgMCS_DL = splitapply(@mean, reTxData_DL.MCS, groups_DL);
-    
+    [groups_DL, RNTIs_DL] = findgroups(dlTotal.RNTI);
+    numDLTotal = splitapply(@numel, dlTotal.GrantType, groups_DL);
+    [groups_DL, RNTIs_DL] = findgroups(dlNew.RNTI);
+    numDLnew = splitapply(@numel, dlNew.GrantType, groups_DL);
+
     % For UL retransmissions
     [groups_UL, RNTIs_UL] = findgroups(reTxData_UL.RNTI);
     numReTx_UL = splitapply(@numel, reTxData_UL.TxType, groups_UL);
     avgMCS_UL = splitapply(@mean, reTxData_UL.MCS, groups_UL);
+    
+    [groups_UL, RNTIs_UL] = findgroups(ulTotal.RNTI);
+    numULTotal = splitapply(@numel, ulTotal.GrantType, groups_UL);
+
+    [groups_UL, RNTIs_UL] = findgroups(ulNew.RNTI);
+    numULnew = splitapply(@numel, ulNew.GrantType, groups_UL);
     
     % Combine DL and UL summaries into one table
     % First, create individual tables
@@ -73,6 +91,9 @@ function simulationLogs = findReTransmissions(simulationLogs,simParameters)
     % Merge the DL and UL summaries based on RNTI
     Summary = outerjoin(DL_Summary, UL_Summary, 'Keys', 'RNTI', 'MergeKeys', true);
     
+    Results = table(RNTIs_DL,numDLTotal,numDLnew,numReTx_DL, avgMCS_DL, ...
+                 numULTotal,numULnew,numReTx_UL, avgMCS_UL, 'VariableNames', {'RNTIs_DL','numDLTotal','numDLnew','numReTx_DL', 'avgMCS_DL','numULTotal','numULnew','numReTx_UL', 'avgMCS_UL'})
+
     % Replace NaN with zeros for counts and averages where appropriate
     Summary.NumDLReTx(isnan(Summary.NumDLReTx)) = 0;
     Summary.NumULReTx(isnan(Summary.NumULReTx)) = 0;
@@ -123,25 +144,20 @@ function simulationLogs = findReTransmissions(simulationLogs,simParameters)
     % Step 9: Display the results
     disp('Retransmissions Summary:');
     disp(Summary);
+    class(Summary)
     
+    % scatter(Summary.CodingRate_DL,Summary.NumDLReTx)
 
+    resultsTable = Results;
 
-
-
-
-
-
-
-
-
-    %add analysis back to logs
-    simulationLogs{end+1, 1} = "numReTxDL";
-    simulationLogs{end, 2} = numReTxDL;
-
-    simulationLogs{end+1, 1} = "numReTxUL";
-    simulationLogs{end, 2} = numReTxUL;
-    simulationLogs{end+1,1} = 'avgMcs';
-    simulationLogs{end,2} = avgMCS;
-
-    disp(simulationLogs);
+    % %add analysis back to logs
+    % simulationLogs{end+1, 1} = "numReTxDL";
+    % simulationLogs{end, 2} = numReTxDL;
+    % 
+    % simulationLogs{end+1, 1} = "numReTxUL";
+    % simulationLogs{end, 2} = numReTxUL;
+    % simulationLogs{end+1,1} = 'avgMcs';
+    % simulationLogs{end,2} = avgMCS;
+    % 
+    % disp(simulationLogs);
 end 

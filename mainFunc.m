@@ -1,4 +1,4 @@
-function mainFunc(simParameters)
+function resultsTable = mainFunc(simParameters)
 %effectivly the same as Main but calling it with a different static MCS
 %each time
 
@@ -28,6 +28,11 @@ validateattributes(simParameters.UEPosition,{'numeric'},{'nonempty','real','nrow
 % simParameters.dlAppDataRate = [10e3];
 % simParameters.ulAppDataRate = [10e3];
 
+%% MCS TABLE SELECTION
+global mcsTable_selection
+mcsTable_selection = simParameters.mcsTable;
+
+
 %% 
 
 % Set the channel bandwidth to 5 MHz and the subcarrier spacing (SCS) to 15 kHz as defined in 3GPP TS 38.104 Section 5.3.2. The complete bandwidth is assumed to be allotted for PUSCH or PDSCH.
@@ -50,13 +55,16 @@ simParameters.NumULSlots = 2; % Number of consecutive full UL slots at the end o
 % Specify the scheduling strategy, the time domain resource assignment granualarity and the maximum limit on the RBs allotted for PDSCH and PUSCH. The time domain resource assignment granualarity is applicable only for symbol-based scheduling. If the number of symbols (DL or UL) are less than the configured time domain resource assignment granularity, then a smaller valid granularity is chosen. For slot-based scheduling, biggest possible granularity in a slot is chosen. The RB transmission limit applies only to new transmissions and not to the retransmissions.
 simParameters.SchedulerStrategy = simParameters.schStrat; % Supported scheduling strategies: 'PF', 'RR' and 'BestCQI'
 global staticMCS ;
-staticMCS = 0;
-if strcmp(simParameters.schStrat,'staticMCS')
-    staticMCS = mcsInt;
+global schStrat ;
+schStrat = simParameters.schStrat;
+staticMCS = simParameters.mcsInt;
+if strcmp(simParameters.schStrat,'StaticMCS')
+    staticMCS = simParameters.mcsInt;
 end
-simParameters.TTIGranularity = 4;
-simParameters.RBAllocationLimitUL = 15; % For PUSCH
-simParameters.RBAllocationLimitDL = 15; % For PDSCH
+% simParameters.TTIGranularity = 4;
+
+simParameters.RBAllocationLimitUL = 20; % For PUSCH
+simParameters.RBAllocationLimitDL = 20; % For PDSCH
 %% 
 % Set the UL scheduling related configurations - BSR periodicity and PUSCH preparation time. gNB ensures that PUSCH assignment is received at the UEs at least PUSCHPrepTime ahead of the transmission time.
 simParameters.BSRPeriodicity = 1; % Buffer status report transmission periodicity (in ms)
@@ -235,7 +243,7 @@ end
 simParameters.radar = [];
 simParameters.radar.prf = 1e3;
 simParameters.radar.FreqOffset = 0e6;
-simParameters.radar.PulseWidth = 70e-6;
+simParameters.radar.PulseWidth = 60e-6;
 simParameters.radar.BW = 5e6;
 pulseSlotId = 2;
 simParameters.radar.pulseSlotId = pulseSlotId;
@@ -344,7 +352,7 @@ if enableTraces
     logInfo.RLCLogs = getRLCLogs(simRLCLogger); % RLC statistics logs
     simulationLogs{1} = logInfo;
     
-    simulationLogs = findReTransmissions(simulationLogs, simParameters); %add the reTx to the log files
+    resultsTable = findReTransmissions(simulationLogs, simParameters); %add the reTx to the log files
    
     save(simulationLogFile, 'simulationLogs'); % Save simulation logs in a MAT-file
     save(parametersLogFile, 'simParameters'); % Save simulation parameters in a MAT-file

@@ -1,0 +1,6 @@
+RNTIs_DL,numDLTotal,numDLnew,numReTx_DL,avgMCS_DL,numULTotal,numULnew,numReTx_UL,avgMCS_UL
+1,100,44,56,6,95,44,51,6
+2,100,44,56,6,95,44,51,6
+3,100,42,58,6,95,44,51,6
+4,100,43,57,6,95,44,51,6
+5,100,43,57,6,95,44,51,6

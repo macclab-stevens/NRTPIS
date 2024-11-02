@@ -1,0 +1,6 @@
+RNTI,NumDLReTx,AverageMCS_DL,NumULReTx,AverageMCS_UL,ClosestMCSIndex_DL,CodingRate_DL,ClosestMCSIndex_UL,CodingRate_UL
+1,84,5,54,5,5,378,5,378
+2,84,5,54,5,5,378,5,378
+3,84,5,54,5,5,378,5,378
+4,84,5,54,5,5,378,5,378
+5,84,5,54,5,5,378,5,378
