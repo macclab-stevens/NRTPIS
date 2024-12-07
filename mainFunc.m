@@ -243,7 +243,9 @@ end
 simParameters.radar = [];
 simParameters.radar.prf = 1e3;
 simParameters.radar.FreqOffset = 0e6;
-simParameters.radar.PulseWidth = 60e-6;
+% simParameters.radar.PulseWidth = 60e-6;
+simParameters.radar.PulseWidth = simParameters.PulseWidth 
+pw = simParameters.radar.PulseWidth * 10^(6)
 simParameters.radar.BW = 5e6;
 pulseSlotId = 1;
 simParameters.radar.pulseSlotId = pulseSlotId;
@@ -259,7 +261,7 @@ slotStartIdx = symStarts(pulseSlotId);
 slotLength = symLgths(pulseSlotId);
 a = zeros(1,slotStartIdx);
 x = complex(a,0);
-
+simParameters.radar.PulseWidth
 fm = phased.CustomFMWaveform('SampleRate',fs,'PulseWidth',simParameters.radar.PulseWidth,'FrequencyModulation',freq, ...
     'PRF',simParameters.radar.prf,'FrequencyOffsetSource','Property','FrequencyOffset',simParameters.radar.FreqOffset,OutputFormat='Samples',NumSamples=(7680));
 y = fm();
@@ -359,7 +361,7 @@ if enableTraces
     dt = datestr(now,'yymmdd-HHMMSS');
     newFolderName = strcat('Results/',dt,"/");
     mkdir(newFolderName)
-    simFileName = strcat(newFolderName,dt,'_',simulationMetricsFile);
+    simFileName = strcat(newFolderName,dt,'_',string(pw),simulationMetricsFile);
     save(simFileName, 'simulationLogs'); % Save simulation logs in a MAT-file
     parFileName = strcat(newFolderName,dt,'_',parametersLogFile);
     save(parFileName, 'simParameters'); % Save simulation parameters in a MAT-file
