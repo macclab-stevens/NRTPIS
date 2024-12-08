@@ -1,6 +1,14 @@
 simParameters = [];
+rng('shuffle');
+for i = 1:1000
+    rng('shuffle');
+    clear -except i
+    % PulseWidthValues = 10e-6:10e-6:500e-6
+    % randomPWIndex = randi(length(PulseWidthValues)); % Generate a random index
+    % PulseWidth = PulseWidthValues(randomPWIndex); % Select the random value
+    PulseWidth = (randperm(500,1)+5)*10^(-6)
+    pulseStartIndx = randperm(3840,1)    
 
-for simParameters.PulseWidth = 10e-6:10e-6:1000e-6;
     % clear;
     simParameters.schStrat = "StaticMCS";
     % simParameters.schStrat = "RR";
@@ -10,7 +18,8 @@ for simParameters.PulseWidth = 10e-6:10e-6:1000e-6;
     simParameters.NumUEs = 10
 
 
-    % simParameters.PulseWidth = 50e-6;
+    simParameters.PulseWidth = PulseWidth;
+    simParemeters.PulseStartIndx = pulseStartIndx;
     ;
     % Assign position to the UEs assuming that the gNB is at (0, 0, 0). N-by-3
     % matrix where 'N' is the number of UEs. Each row has (x, y, z) position of a
@@ -29,9 +38,9 @@ for simParameters.PulseWidth = 10e-6:10e-6:1000e-6;
     simParameters.ulAppDataRate = repmat([10e6], simParameters.NumUEs, 1);
     simParameters.dlAppDataRate = repmat([10e6], simParameters.NumUEs, 1);
 
-    simParameters.TTIGranularity = 4;
+    simParameters.TTIGranularity = 2;
     dt = datestr(now,'yymmdd-HHMMSS');
-    newFolderName = strcat('Results/TTI_Run_',dt,'pw',string(simParameters.PulseWidth),'/tti_',string(simParameters.TTIGranularity),"_MCSWalk_",string(simParameters.mcsTable),"/");
+    newFolderName = strcat('Results/TTI_Run_',dt,'pw',string(simParameters.PulseWidth*10^6),'_PWSl_',string(pulseStartIndx),'/tti_',string(simParameters.TTIGranularity),"_MCSWalk_",string(simParameters.mcsTable),"/");
 
     mkdir(newFolderName)
     % for i = 1:1
