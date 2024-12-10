@@ -3,6 +3,7 @@ rng('shuffle');
 for i = 1:1000
     rng('shuffle');
     clear -except i
+    simParameters.folderName = 'Run1/'
     % PulseWidthValues = 10e-6:10e-6:500e-6
     % randomPWIndex = randi(length(PulseWidthValues)); % Generate a random index
     % PulseWidth = PulseWidthValues(randomPWIndex); % Select the random value
@@ -13,7 +14,7 @@ for i = 1:1000
     simParameters.schStrat = "StaticMCS";
     % simParameters.schStrat = "RR";
     simParameters.mcsInt = 5;
-    simParameters.NumFramesSim = 10; % Simulation time in terms of number of 10 ms frames (100 = 10s
+    simParameters.NumFramesSim = 3; % Simulation time in terms of number of 10 ms frames (100 = 10s
     simParameters.mcsTable = '256QAM';
     simParameters.NumUEs = 10
 
@@ -48,8 +49,9 @@ for i = 1:1000
         disp(i)
         tblFileName = strcat(newFolderName,'_MCS',string(i));
         simParameters.mcsInt = 5;
-        resultsTable = mainFunc(simParameters);
-        writetable(resultsTable,tblFileName);
+        % resultsTable = mainFunc(simParameters);
+        % writetable(resultsTable,tblFileName);
+        mainFunc(simParameters);
     % end
 
 end

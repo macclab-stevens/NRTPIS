@@ -261,7 +261,7 @@ slotStartIdx = symStarts(pulseSlotId);
 slotLength = symLgths(pulseSlotId);
 a = zeros(1,slotStartIdx);
 x = complex(a,0);
-simParameters.radar.PulseWidth
+simParameters.radar.slotStartIdx = slotStartIdx
 fm = phased.CustomFMWaveform('SampleRate',fs,'PulseWidth',simParameters.radar.PulseWidth,'FrequencyModulation',freq, ...
     'PRF',simParameters.radar.prf,'FrequencyOffsetSource','Property','FrequencyOffset',simParameters.radar.FreqOffset,OutputFormat='Samples',NumSamples=(7680));
 y = fm();
@@ -354,12 +354,12 @@ if enableTraces
     logInfo.RLCLogs = getRLCLogs(simRLCLogger); % RLC statistics logs
     simulationLogs{1} = logInfo;
     
-    resultsTable = findReTransmissions(simulationLogs, simParameters); %add the reTx to the log files
+    % resultsTable = findReTransmissions(simulationLogs, simParameters); %add the reTx to the log files
    
     save(simulationLogFile, 'simulationLogs'); % Save simulation logs in a MAT-file
     save(parametersLogFile, 'simParameters'); % Save simulation parameters in a MAT-file
     dt = datestr(now,'yymmdd-HHMMSS');
-    newFolderName = strcat('Results/',dt,"/");
+    newFolderName = strcat(simParameters.folderName,dt,"/");
     mkdir(newFolderName)
     simFileName = strcat(newFolderName,dt,'_',string(pw),simulationMetricsFile);
     save(simFileName, 'simulationLogs'); % Save simulation logs in a MAT-file

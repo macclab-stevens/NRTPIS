@@ -1,4 +1,39 @@
+% ------------------------------------------------------------------------
+% Function: findReTransmissions
+% Description:
+%   This function processes simulation logs to analyze and summarize
+%   retransmission data for both Downlink (DL) and Uplink (UL) transmissions.
+%   It calculates the number of retransmissions, average MCS (Modulation
+%   and Coding Scheme), and maps these values to the closest coding rate
+%   using the MCS Table.
+%
+% Inputs:
+%   - simulationLogs: Cell array containing scheduling assignment logs.
+%   - simParameters: Struct containing simulation configuration parameters.
+%
+% Outputs:
+%   - resultsTable: A table summarizing the results, including:
+%       - RNTIs_DL: Unique RNTIs for Downlink.
+%       - numDLTotal: Total DL transmissions.
+%       - numDLnew: New DL transmissions.
+%       - numReTx_DL: Retransmitted DL packets.
+%       - avgMCS_DL: Average DL MCS.
+%       - numULTotal: Total UL transmissions.
+%       - numULnew: New UL transmissions.
+%       - numReTx_UL: Retransmitted UL packets.
+%       - avgMCS_UL: Average UL MCS.
+%
+% Author:
+%   [Your Name]
+%
+% Date:
+%   [Date of Creation]
+%
+% ------------------------------------------------------------------------
 function resultsTable = findReTransmissions(simulationLogs,simParameters)
+
+    analyzeSimulationLogs(simulationLogs);
+    
     simTable = simulationLogs{1, 1}.SchedulingAssignmentLogs();
     numReTxDL =  zeros(simParameters.NumUEs,1);
     numReTxUL = zeros(simParameters.NumUEs,1);
@@ -149,15 +184,81 @@ function resultsTable = findReTransmissions(simulationLogs,simParameters)
     % scatter(Summary.CodingRate_DL,Summary.NumDLReTx)
 
     resultsTable = Results;
-
-    % %add analysis back to logs
-    % simulationLogs{end+1, 1} = "numReTxDL";
-    % simulationLogs{end, 2} = numReTxDL;
-    % 
-    % simulationLogs{end+1, 1} = "numReTxUL";
-    % simulationLogs{end, 2} = numReTxUL;
-    % simulationLogs{end+1,1} = 'avgMcs';
-    % simulationLogs{end,2} = avgMCS;
-    % 
-    % disp(simulationLogs);
+  
 end 
+
+function analyzeSimulationLogs(simulationLogs)
+    % Analyze TimeStepLogs and SchedulingAssignmentLogs
+
+    % Check if simulationLogs is a cell array and access the first element
+    if iscell(simulationLogs)
+        simulationLogs = simulationLogs{1, 1}; % Adjust index as needed
+    end
+
+    % Validate if simulationLogs contains TimeStepLogs and SchedulingAssignmentLogs
+    if isfield(simulationLogs, 'TimeStepLogs') && isfield(simulationLogs, 'SchedulingAssignmentLogs')
+        timeStepLogs = simulationLogs.TimeStepLogs;
+        schedulingAssignmentLogs = simulationLogs.SchedulingAssignmentLogs;
+    else
+        error('simulationLogs does not contain the expected fields: TimeStepLogs and SchedulingAssignmentLogs.');
+    end
+
+    % Initialize containers for results
+    if iscell(timeStepLogs) && ~isempty(timeStepLogs{1, 1}) && isstruct(timeStepLogs{1, 1})
+        firstLogEntry = timeStepLogs{1, 1};
+        if isfield(firstLogEntry, 'BufferStatusOfUes')
+            numUes = size(firstLogEntry.BufferStatusOfUes, 1);
+        else
+            error('BufferStatusOfUes field is missing in TimeStepLogs.');
+        end
+    else
+        error('TimeStepLogs is not structured as expected.');
+    end
+
+    throughputPerUe = zeros(numUes, 1);
+    goodputPerUe = zeros(numUes, 1);
+
+    % Process TimeStepLogs
+    disp('Processing TimeStepLogs...');
+    for i = 1:size(timeStepLogs, 1)
+        logEntry = timeStepLogs{i, 1};
+        if isfield(logEntry, 'ThroughputBytes') && isfield(logEntry, 'GoodputBytes')
+            throughputPerUe = throughputPerUe + logEntry.ThroughputBytes(:);
+            goodputPerUe = goodputPerUe + logEntry.GoodputBytes(:);
+        else
+            warning(['TimeStepLogs entry ', num2str(i), ' is missing ThroughputBytes or GoodputBytes fields.']);
+        end
+    end
+
+    % Summarize SchedulingAssignmentLogs
+    disp('Processing SchedulingAssignmentLogs...');
+    schedulingSummary = zeros(numUes, 1); % Example metric
+    for i = 1:size(schedulingAssignmentLogs, 1)
+        logEntry = schedulingAssignmentLogs{i, 1};
+        if isfield(logEntry, 'Rnti') && isfield(logEntry, 'NumScheduledSymbols')
+            for j = 1:length(logEntry.Rnti)
+                if logEntry.Rnti(j) <= numUes
+                    schedulingSummary(logEntry.Rnti(j)) = schedulingSummary(logEntry.Rnti(j)) + logEntry.NumScheduledSymbols(j);
+                else
+                    warning(['RNTI ', num2str(logEntry.Rnti(j)), ' exceeds the number of UEs.']);
+                end
+            end
+        else
+            warning(['SchedulingAssignmentLogs entry ', num2str(i), ' is missing Rnti or NumScheduledSymbols fields.']);
+        end
+    end
+
+    % Display results
+    disp('Throughput per UE:');
+    disp(throughputPerUe);
+    disp('Goodput per UE:');
+    disp(goodputPerUe);
+    disp('Scheduling Summary:');
+    disp(schedulingSummary);
+
+    % Write results to a CSV file
+    resultsTable = table((1:numUes)', throughputPerUe, goodputPerUe, schedulingSummary, ...
+                         'VariableNames', {'UE', 'Throughput', 'Goodput', 'ScheduledSymbols'});
+    writetable(resultsTable, 'simulation_results.csv');
+    disp('Results written to simulation_results.csv');
+end
