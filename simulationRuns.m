@@ -1,6 +1,6 @@
 simParameters = [];
 rng('shuffle');
-for i = 1:1000
+for i = 1:1
     rng('shuffle');
     clear -except i
     simParameters.folderName = 'Run1/'
@@ -20,7 +20,7 @@ for i = 1:1000
 
 
     simParameters.PulseWidth = PulseWidth;
-    simParemeters.PulseStartIndx = pulseStartIndx;
+    simParameters.PulseStartIndx = pulseStartIndx;
     ;
     % Assign position to the UEs assuming that the gNB is at (0, 0, 0). N-by-3
     % matrix where 'N' is the number of UEs. Each row has (x, y, z) position of a

@@ -3,6 +3,37 @@ import scipy.io
 import pandas as pd
 import numpy as np
 
+
+def process_sim_parameters(sim_params_file):
+    """Load radar parameters and TTI from simParameters.mat."""
+    try:
+        sim_params = scipy.io.loadmat(sim_params_file)
+
+        # Access the main simParameters structure
+        sim_parameters_struct = sim_params.get("simParameters", None)
+        if sim_parameters_struct is None:
+            raise ValueError("simParameters not found in .mat file.")
+
+        sim_parameters = sim_parameters_struct[0, 0]  # Access the first (and only) instance
+
+        # Extract TTI granularity
+        tti = sim_parameters["TTIGranularity"][0, 0] if "TTIGranularity" in sim_parameters.dtype.names else None
+
+        # Extract radar parameters (ensure 'radar' field exists)
+        radar_params = {}
+        if "radar" in sim_parameters.dtype.names:
+            radar_struct = sim_parameters["radar"][0, 0]  # Access the radar structure
+            radar_params = {
+                field: radar_struct[field][0, 0]
+                for field in radar_struct.dtype.names
+                if field != "waveform"  # Exclude the "waveform" field
+            }
+
+        return radar_params, tti
+    except Exception as e:
+        print(f"Error processing simParameters file {sim_params_file}: {e}")
+        return {}, None
+
 def process_timestep_logs(timestep_logs):
     """Process timestepLogs to extract throughput and goodput for each RNTI."""
     throughput_goodput = {}
@@ -119,7 +150,8 @@ def process_scheduling_logs(scheduling_logs):
 
     return metrics
 
-def process_mat_file(filepath):
+
+def process_mat_file(filepath, sim_params_file):
     """Load and process a .mat file."""
     try:
         mat_data = scipy.io.loadmat(filepath)
@@ -145,20 +177,23 @@ def process_mat_file(filepath):
                     metrics[rnti]["UL_throughput"] = tg_data["UL_throughput"]
                     metrics[rnti]["UL_goodput"] = tg_data["UL_goodput"]
 
-            return metrics
+            # Process simulation parameters
+            radar_params, tti = process_sim_parameters(sim_params_file)
+
+            return metrics, radar_params, tti
         else:
             print(f"No simulationLogs found in {filepath}")
-            return None
+            return None, None, None
     except Exception as e:
         print(f"Error processing {filepath}: {e}")
-        return None
+        return None, None, None
 
 
-def save_metrics_to_csv(metrics, output_file):
-    """Save computed DL/UL metrics and timestep logs to a CSV file."""
+def save_metrics_to_csv(metrics, radar_params, tti, output_file):
+    """Save computed DL/UL metrics, radar parameters, and TTI to a CSV file."""
     rows = []
     for rnti, data in metrics.items():
-        rows.append({
+        row = {
             "RNTI": rnti,
             "numDLTotal": data["numDLTotal"],
             "numDLnew": data["numDLnew"],
@@ -172,7 +207,12 @@ def save_metrics_to_csv(metrics, output_file):
             "DL_goodput (bits)": round(data["DL_goodput"], 2),
             "UL_throughput (bits)": round(data["UL_throughput"], 2),
             "UL_goodput (bits)": round(data["UL_goodput"], 2),
-        })
+            "TTI": tti,
+        }
+        # Add radar parameters
+        for key, value in radar_params.items():
+            row[key] = value
+        rows.append(row)
 
     # Convert to DataFrame and save
     df = pd.DataFrame(rows)
@@ -183,14 +223,22 @@ def save_metrics_to_csv(metrics, output_file):
 def process_directory(root_dir):
     """Recursively process .mat files in the directory."""
     for subdir, _, files in os.walk(root_dir):
+        sim_params_file = None
+        for file in files:
+            if file.endswith("simParameters.mat"):
+                sim_params_file = os.path.join(subdir, file)
+
         for file in files:
             if file.endswith("simulationMetrics.mat"):
                 filepath = os.path.join(subdir, file)
                 print(f"Processing file: {filepath}")
-                metrics = process_mat_file(filepath)
+                if not sim_params_file:
+                    print(f"No simParameters.mat found for {filepath}")
+                    continue
+                metrics, radar_params, tti = process_mat_file(filepath, sim_params_file)
                 if metrics:
                     output_file = os.path.join(subdir, "processed_metrics.csv")
-                    save_metrics_to_csv(metrics, output_file)
+                    save_metrics_to_csv(metrics, radar_params, tti, output_file)
 
 
 # Main

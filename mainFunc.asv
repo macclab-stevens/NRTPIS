@@ -268,7 +268,7 @@ simParameters.radar.slotStartIdx = slotStartIdx
 % each frame is 1ms. 
 %Therefor nummPulses = roundUP(numFrames/Pri)
 simParameters.radar.numPulses = ceil((simParameters.NumFramesSim * 1e-3)/simParameters.radar.prf)
-fm = phased.CustomFMWaveform('SampleRate',fs,'PulseWidth',simParameters.radar.PulseWidth,'PRF',simParameters.radar.prf,'FrequencyModulation',freq, ...
+fm = phased.CustomFMWaveform('SampleRate',fs,'PulseWidth',simParameters.radar.PulseWidth,'prf',simParameters.radar.prf,'FrequencyModulation',freq, ...
     'PRF',simParameters.radar.prf,'FrequencyOffsetSource','Property','FrequencyOffset',simParameters.radar.FreqOffset,OutputFormat='Samples',NumSamples=(7680));
 y = fm();
 y = y(1:end-slotStartIdx);
