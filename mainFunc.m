@@ -37,7 +37,7 @@ mcsTable_selection = simParameters.mcsTable;
 
 % Set the channel bandwidth to 5 MHz and the subcarrier spacing (SCS) to 15 kHz as defined in 3GPP TS 38.104 Section 5.3.2. The complete bandwidth is assumed to be allotted for PUSCH or PDSCH.
 simParameters.NumRBs = 20;
-simParameters.SCS = 15; % kHz
+simParameters.SCS = 15*2^(simParameters.numerology); % kHz
 simParameters.DLBandwidth = 5e6; % Hz
 simParameters.ULBandwidth = 5e6; % Hz
 simParameters.DLCarrierFreq = 2.595e9; % Hz
@@ -46,7 +46,7 @@ simParameters.ULCarrierFreq = 2.595e9; % Hz
 
 % Specify the TDD DL-UL pattern. The reference subcarrier spacing used for calculating slot duration for the pattern is assumed to be same as actual subcarrier spacing used for transmission as defined by simParameters.SCS. Keep only the symbols intended for guard period during DLULPeriodicity with type (DL or UL) unspecified.
 simParameters.DLULPeriodicity = 5; % Duration of the DL-UL pattern in ms
-simParameters.NumDLSlots = 2; % Number of consecutive full DL slots at the beginning of each DL-UL pattern
+simParameters.NumDLSlots = 7; % Number of consecutive full DL slots at the beginning of each DL-UL pattern
 simParameters.NumDLSyms = 8; % Number of consecutive DL symbols in the beginning of the slot following the last full DL slot
 simParameters.NumULSyms = 4; % Number of consecutive UL symbols in the end of the slot preceding the first full UL slot
 simParameters.NumULSlots = 2; % Number of consecutive full UL slots at the end of each DL-UL pattern
@@ -241,7 +241,7 @@ end
 
 % Radar Setup    
 simParameters.radar = [];
-simParameters.radar.prf = 1e-3;
+simParameters.radar.prf = simParameters.prf; %Hz e.g. 1e3 = 1Khz = 1ms PRI
 simParameters.radar.FreqOffset = 0e6;
 % simParameters.radar.PulseWidth = 60e-6;
 simParameters.radar.PulseWidth = simParameters.PulseWidth 
@@ -252,7 +252,7 @@ simParameters.radar.BW = 5e6;
 nfft1 = 512;
 BW = 5e6;
 fs = 10*BW;
-fs = 7680000;
+fs = 7680000*2^simParameters.numerology;
 w = taylorwin(200,4,-35);
 freq = nlfmspec2freq(simParameters.radar.BW ,w);
 symLgths = [552   548   548   548   548   548   548   552   548   548   548   548   548   548];
@@ -262,27 +262,61 @@ slotStartIdx = simParameters.PulseStartIndx
 % slotLength = symLgths(pulseSlotId);
 a = zeros(1,slotStartIdx);
 x = complex(a,0);
-simParameters.radar.slotStartIdx = slotStartIdx
+% simParameters.radar.slotStartIdx = slotStartIdx
 
 %num PUlses such that PRI*numPulses > numFrames. 
 % each frame is 1ms. 
 %Therefor nummPulses = roundUP(numFrames/Pri)
-simParameters.radar.numPulses = ceil((simParameters.NumFramesSim * 1e-3)/simParameters.radar.prf)
-fm = phased.CustomFMWaveform('SampleRate',fs,'PulseWidth',simParameters.radar.PulseWidth,'PRF',simParameters.radar.prf,'FrequencyModulation',freq, ...
-    'PRF',simParameters.radar.prf,'FrequencyOffsetSource','Property','FrequencyOffset',simParameters.radar.FreqOffset,OutputFormat='Samples',NumSamples=(7680));
+simParameters.radar.numPulses = ceil((simParameters.NumFramesSim *10 * 1e-3)/simParameters.radar.prf)
+fm = phased.CustomFMWaveform('SampleRate',fs,'PulseWidth',simParameters.radar.PulseWidth,'NumPulses',simParameters.radar.numPulses,'PRF',simParameters.radar.prf,'FrequencyModulation',freq, ...
+    'PRF',simParameters.radar.prf,'FrequencyOffsetSource','Property','FrequencyOffset',simParameters.radar.FreqOffset,OutputFormat='Samples',NumSamples=(7680*simParameters.NumFramesSim*10*2^(simParameters.numerology)));
 y = fm();
 y = y(1:end-slotStartIdx);
-z = [x';y];
+% z = [x';y];
 % spectrogram(z,100,0,nfft1,fs,'centered','yaxis') 
 
 simParameters.radar.waveform = [x';y];
 simParameters.radar.pulseIdxOffset_ms = (slotStartIdx/length(simParameters.radar.waveform) ) * 1e-3
+
+% Assuming x and y are defined
+pulse = [x'; y];  % Combine x and y into the pulse array
+
+% Number of parts to divide into
+n = simParameters.NumFramesSim*10*2^(simParameters.numerology)  % Example: divide into 5 parts
+
+% Determine the size of each part
+total_length = length(pulse);
+part_length = floor(total_length / n);  % Length of each part
+
+% Preallocate a cell array to store the parts
+pulse_parts = cell(1, n);
+
+% Divide the pulse into n parts
+for i = 1:n
+    start_idx = (i - 1) * part_length + 1;  % Start index of the current part
+    if i == n
+        % Last part includes any leftover elements
+        end_idx = total_length;
+    else
+        end_idx = i * part_length;  % End index of the current part
+    end
+    pulse_parts{i} = pulse(start_idx:end_idx);  % Store the part in the cell array
+end
+
+% Display the sizes of each part
+for i = 1:n
+    disp(['Part ', num2str(i), ' size: ', num2str(length(pulse_parts{i}))]);
+end
+pulse_parts
 global pulse 
 global pulON
 pulON = true;
-pulse = [x';y];
+% pulse = [x';y];
+pulse = pulse_parts
 % if pulON
-%     spectrogram(pulse,50,0,nfft1,fs,'centered','yaxis') ;
+%     spectrogram([x'; y],50,0,nfft1,fs,'centered','yaxis') ;
+%     spectrogram(pulse_parts{1},50,0,nfft1,fs,'centered','yaxis') ;
+%     spectrogram(pulse_parts{2},50,0,nfft1,fs,'centered','yaxis') ;
 % end
 
 % Configure the channel model

@@ -746,7 +746,7 @@ classdef hNRGNBPhy < hNRPhyInterface
             global pulON
             if pulON
                 fprintf("AFN: %d  CurSlot: %d \n",obj.AFN,obj.CurrSlot)
-                txWaveform = pulse{(obj.AFN+1)*(obj.CurrSlot+1)}+txWaveform ;
+                txWaveform = pulse{(obj.AFN+1)*obj.CurrSlot+1}+txWaveform ;
             end
             % OLD >>> spectrogram(txWaveform,ones(obj.WaveformInfoDL.Nfft,1),0,obj.WaveformInfoDL.Nfft,'centered',obj.WaveformInfoDL.SampleRate,'yaxis','MinThreshold',-130)
             

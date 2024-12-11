@@ -646,7 +646,7 @@ classdef hNRUEPhy < hNRPhyInterface
             global pulse 
             global pulON
             if pulON
-                txWaveform = pulse+txWaveform ;
+                txWaveform = pulse{(obj.AFN+1)*(obj.CurrSlot+1)}+txWaveform ;
             end
             
             % Trim txWaveform to span only the transmission symbols
