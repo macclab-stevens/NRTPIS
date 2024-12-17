@@ -11,7 +11,7 @@ wirelessnetworkSupportPackageCheck
 rng('default'); % Reset the random number generator
 % simParameters = []; % Clear simParameters variable
 % simParameters.NumFramesSim = 10; % Simulation time in terms of number of 10 ms frames (100 = 10s
-simParameters.SchedulingType = 1; % Set the value to 0 (slot-based scheduling) or 1 (symbol-based scheduling)
+simParameters.SchedulingType = simParameters.slotOrSymbol; % Set the value to 0 (slot-based scheduling) or 1 (symbol-based scheduling)
 % Specify the number of UEs in the cell, assuming that UEs have sequential radio network temporary identifiers (RNTIs) from 1 to simParameters.NumUEs. If you change the number of UEs, ensure that the number of rows in simParameters.UEPosition parameter equals to the value of simParameters.NumUEs.
 % simParameters.NumUEs = 1;
 % Assign position to the UEs assuming that the gNB is at (0, 0, 0). N-by-3
@@ -36,10 +36,14 @@ mcsTable_selection = simParameters.mcsTable;
 %% 
 
 % Set the channel bandwidth to 5 MHz and the subcarrier spacing (SCS) to 15 kHz as defined in 3GPP TS 38.104 Section 5.3.2. The complete bandwidth is assumed to be allotted for PUSCH or PDSCH.
-simParameters.NumRBs = 20;
+suppBW_15 = [ 10 15 20  25  30  40  50 ]
+rbsBW_15 =  [ 52 79 106 133 160 216 270    ]
+suppBW_30 = [10 15 20 25 30 40  50  60  70  80  90  100]
+rbsBW_30 =  [24 38 51 65 78 106 133 162 189 217 245 273]
+simParameters.NumRBs = 51;
 simParameters.SCS = 15*2^(simParameters.numerology); % kHz
-simParameters.DLBandwidth = 5e6; % Hz
-simParameters.ULBandwidth = 5e6; % Hz
+simParameters.DLBandwidth = 20e6; % Hz
+simParameters.ULBandwidth = 20e6; % Hz
 simParameters.DLCarrierFreq = 2.595e9; % Hz
 simParameters.ULCarrierFreq = 2.595e9; % Hz
 %% 
@@ -242,17 +246,15 @@ end
 % Radar Setup    
 simParameters.radar = [];
 simParameters.radar.prf = simParameters.prf; %Hz e.g. 1e3 = 1Khz = 1ms PRI
-simParameters.radar.FreqOffset = 0e6;
+simParameters.radar.FreqOffset = simParameters.PulseBWoffset;
 % simParameters.radar.PulseWidth = 60e-6;
 simParameters.radar.PulseWidth = simParameters.PulseWidth 
-pw = simParameters.radar.PulseWidth * 10^(6)
-simParameters.radar.BW = 5e6;
+% pw = simParameters.radar.PulseWidth * 10^(6)
+simParameters.radar.BW =  simParameters.PulseBW;
 % pulseSlotId = 1;
 % simParameters.radar.pulseSlotId = pulseSlotId;
-nfft1 = 512;
-BW = 5e6;
-fs = 10*BW;
-fs = 7680000*2^simParameters.numerology;
+nfft1 = 512*2^simParameters.numerology;
+fs = 7680000*2*2^simParameters.numerology;
 w = taylorwin(200,4,-35);
 freq = nlfmspec2freq(simParameters.radar.BW ,w);
 symLgths = [552   548   548   548   548   548   548   552   548   548   548   548   548   548];
@@ -268,12 +270,21 @@ x = complex(a,0);
 % each frame is 1ms. 
 %Therefor nummPulses = roundUP(numFrames/Pri)
 simParameters.radar.numPulses = ceil((simParameters.NumFramesSim *10 * 1e-3)/simParameters.radar.prf)
-fm = phased.CustomFMWaveform('SampleRate',fs,'PulseWidth',simParameters.radar.PulseWidth,'NumPulses',simParameters.radar.numPulses,'PRF',simParameters.radar.prf,'FrequencyModulation',freq, ...
-    'PRF',simParameters.radar.prf,'FrequencyOffsetSource','Property','FrequencyOffset',simParameters.radar.FreqOffset,OutputFormat='Samples',NumSamples=(7680*simParameters.NumFramesSim*10*2^(simParameters.numerology)));
+fm = phased.CustomFMWaveform('SampleRate',fs, ...
+    'PulseWidth',simParameters.radar.PulseWidth, ...
+    'NumPulses',simParameters.radar.numPulses, ...
+    'PRF',simParameters.radar.prf, ...
+    'FrequencyModulation',freq, ...
+    'PRF',simParameters.radar.prf, ...
+    'FrequencyOffsetSource','Property', ...
+    'FrequencyOffset',simParameters.radar.FreqOffset, ...
+    OutputFormat='Samples', ...
+    NumSamples=(7680*2*simParameters.NumFramesSim*10*2^(simParameters.numerology)));
 y = fm();
 y = y(1:end-slotStartIdx);
 % z = [x';y];
 % spectrogram(z,100,0,nfft1,fs,'centered','yaxis') 
+
 
 simParameters.radar.waveform = [x';y];
 simParameters.radar.pulseIdxOffset_ms = (slotStartIdx/length(simParameters.radar.waveform) ) * 1e-3
@@ -281,8 +292,11 @@ simParameters.radar.pulseIdxOffset_ms = (slotStartIdx/length(simParameters.radar
 % Assuming x and y are defined
 pulse = [x'; y];  % Combine x and y into the pulse array
 
+%apply SignalAttenuation
+pulse = db2mag(simParameters.pulseAttenuation)*pulse;
+
 % Number of parts to divide into
-n = simParameters.NumFramesSim*10*2^(simParameters.numerology)  % Example: divide into 5 parts
+n = simParameters.NumFramesSim*10*2^(simParameters.numerology)  % Example: divide into n parts
 
 % Determine the size of each part
 total_length = length(pulse);
@@ -312,12 +326,15 @@ global pulse
 global pulON
 pulON = true;
 % pulse = [x';y];
-pulse = pulse_parts
-% if pulON
-%     spectrogram([x'; y],50,0,nfft1,fs,'centered','yaxis') ;
-%     spectrogram(pulse_parts{1},50,0,nfft1,fs,'centered','yaxis') ;
-%     spectrogram(pulse_parts{2},50,0,nfft1,fs,'centered','yaxis') ;
-% end
+pulse = pulse_parts;
+if pulON
+    spectrogram([x'; y],50,0,nfft1,fs,'centered','yaxis') ;
+    spectrogram(pulse_parts{1},50,0,nfft1,fs,'centered','yaxis') ;
+    spectrogram(pulse_parts{2},50,0,nfft1,fs,'centered','yaxis') ;
+    % signalAnalyzer(pulse{1},'SampleRate',fs)
+    % signalAnalyzer(pulse{1},'SampleRate',fs)
+
+end
 
 % Configure the channel model
   Apply_ChannelModel = true;
@@ -402,7 +419,7 @@ if enableTraces
     dt = datestr(now,'yymmdd-HHMMSS');
     newFolderName = strcat(simParameters.folderName,dt,"/");
     mkdir(newFolderName)
-    simFileName = strcat(newFolderName,dt,'_',string(pw),simulationMetricsFile);
+    simFileName = strcat(newFolderName,dt,'_',simulationMetricsFile);
     save(simFileName, 'simulationLogs'); % Save simulation logs in a MAT-file
     parFileName = strcat(newFolderName,dt,'_',parametersLogFile);
     save(parFileName, 'simParameters'); % Save simulation parameters in a MAT-file

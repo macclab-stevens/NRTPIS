@@ -18,7 +18,9 @@ def process_sim_parameters(sim_params_file):
 
         # Extract TTI granularity
         tti = sim_parameters["TTIGranularity"][0, 0] if "TTIGranularity" in sim_parameters.dtype.names else None
-
+        PulseBWoffset = sim_parameters['PulseBWoffset'][0,0]
+        numRBs = sim_parameters['NumRBs'][0,0]
+        NumFrames = sim_parameters['NumFramesSim'][0,0]
         # Extract radar parameters (ensure 'radar' field exists)
         radar_params = {}
         if "radar" in sim_parameters.dtype.names:
@@ -29,7 +31,7 @@ def process_sim_parameters(sim_params_file):
                 if field != "waveform"  # Exclude the "waveform" field
             }
 
-        return radar_params, tti
+        return radar_params, tti,PulseBWoffset,numRBs,NumFrames
     except Exception as e:
         print(f"Error processing simParameters file {sim_params_file}: {e}")
         return {}, None
@@ -178,9 +180,9 @@ def process_mat_file(filepath, sim_params_file):
                     metrics[rnti]["UL_goodput"] = tg_data["UL_goodput"]
 
             # Process simulation parameters
-            radar_params, tti = process_sim_parameters(sim_params_file)
+            radar_params, tti,PulseBWoffset,numRBs,NumFrames = process_sim_parameters(sim_params_file)
 
-            return metrics, radar_params, tti
+            return metrics, radar_params, tti,PulseBWoffset,numRBs,NumFrames
         else:
             print(f"No simulationLogs found in {filepath}")
             return None, None, None
@@ -189,7 +191,7 @@ def process_mat_file(filepath, sim_params_file):
         return None, None, None
 
 
-def save_metrics_to_csv(metrics, radar_params, tti, output_file):
+def save_metrics_to_csv(metrics, radar_params, tti,PulseBWoffset,numRBs,NumFrames, output_file):
     """Save computed DL/UL metrics, radar parameters, and TTI to a CSV file."""
     rows = []
     for rnti, data in metrics.items():
@@ -208,6 +210,9 @@ def save_metrics_to_csv(metrics, radar_params, tti, output_file):
             "UL_throughput (bits)": round(data["UL_throughput"], 2),
             "UL_goodput (bits)": round(data["UL_goodput"], 2),
             "TTI": tti,
+            'PulseBWoffset':PulseBWoffset,
+            "numRBs":numRBs,
+            'NumFrames':NumFrames
         }
         # Add radar parameters
         for key, value in radar_params.items():
@@ -235,13 +240,13 @@ def process_directory(root_dir):
                 if not sim_params_file:
                     print(f"No simParameters.mat found for {filepath}")
                     continue
-                metrics, radar_params, tti = process_mat_file(filepath, sim_params_file)
+                metrics, radar_params, tti,PulseBWoffset,numRBs,NumFrames = process_mat_file(filepath, sim_params_file)
                 if metrics:
                     output_file = os.path.join(subdir, "processed_metrics.csv")
-                    save_metrics_to_csv(metrics, radar_params, tti, output_file)
+                    save_metrics_to_csv(metrics, radar_params, tti,PulseBWoffset,numRBs,NumFrames, output_file)
 
 
 # Main
 if __name__ == "__main__":
-    root_directory = "./Run1"  # Change this to the root directory of your files
+    root_directory = "./Run_30Khz_1/"  # Change this to the root directory of your files
     process_directory(root_directory)

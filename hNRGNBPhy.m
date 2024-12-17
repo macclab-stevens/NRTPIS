@@ -742,16 +742,19 @@ classdef hNRGNBPhy < hNRPhyInterface
             
             % OFDM modulation
             txWaveform = nrOFDMModulate(carrier, txGrid);
+            tx5gSignal = txWaveform;
             global pulse 
             global pulON
             if pulON
                 fprintf("AFN: %d  CurSlot: %d \n",obj.AFN,obj.CurrSlot)
-                txWaveform = pulse{(obj.AFN+1)*(obj.CurrSlot+1)}+txWaveform ;
+                radarPulse = pulse{(obj.AFN+1)*(obj.CurrSlot+1)};
+                txWaveform = radarPulse+txWaveform ;
+                % signalAnalyzer(pulse{(obj.AFN+1)*(obj.CurrSlot+1)},tx5gSignal,txWaveform,'SampleRate',obj.WaveformInfoDL.SampleRate)
             end
             % OLD >>> spectrogram(txWaveform,ones(obj.WaveformInfoDL.Nfft,1),0,obj.WaveformInfoDL.Nfft,'centered',obj.WaveformInfoDL.SampleRate,'yaxis','MinThreshold',-130)
             
             % THIS ONE
-            % spectrogram(txWaveform,40,0,obj.WaveformInfoDL.Nfft,'centered',obj.WaveformInfoDL.SampleRate,'yaxis','MinThreshold',-130)
+            spectrogram(txWaveform,40,0,obj.WaveformInfoDL.Nfft,'centered',obj.WaveformInfoDL.SampleRate,'yaxis','MinThreshold',-130)
             
             % Trim txWaveform to span only the transmission symbols
             slotNumSubFrame = mod(obj.CurrSlot, obj.WaveformInfoDL.SlotsPerSubframe);
