@@ -32,7 +32,7 @@ for i = 1:1000
 
     simParameters.schStrat = "RR";
     simParameters.mcsInt = 10;
-    simParameters.NumFramesSim = 5; % Simulation time in terms of number of 10 ms frames (100 = 10s
+    simParameters.NumFramesSim = 10; % Simulation time in terms of number of 10 ms frames (100 = 10s
     simParameters.mcsTable = '256QAM';
     simParameters.NumUEs = 20
 

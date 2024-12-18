@@ -29,6 +29,7 @@ def process_sim_parameters(sim_params_file):
                 field: radar_struct[field][0, 0]
                 for field in radar_struct.dtype.names
                 if field != "waveform"  # Exclude the "waveform" field
+                
             }
 
         return radar_params, tti,PulseBWoffset,numRBs,NumFrames
@@ -245,8 +246,25 @@ def process_directory(root_dir):
                     output_file = os.path.join(subdir, "processed_metrics.csv")
                     save_metrics_to_csv(metrics, radar_params, tti,PulseBWoffset,numRBs,NumFrames, output_file)
 
+def generateMainCSV(root_dir):
+    df = pd.DataFrame()
+    for subdir, _, files in os.walk(root_dir):
+        sim_params_file = None
+        for file in files:
+            if file.endswith("metrics.csv"):
+                filepath = os.path.join(subdir, file)
+                print(filepath)
+                csvDF = pd.read_csv(filepath)
+                print(csvDF)
+                df = pd.concat([df,csvDF],ignore_index=True,axis=0).drop_duplicates()
+                print(df)
+    print(df)
+    df = df.drop(['numPulses','pulseIdxOffset_ms'],axis=1)
+    df.to_csv(os.path.join(root_dir, '0_RunData.csv'))
+    return 
 
 # Main
 if __name__ == "__main__":
     root_directory = "./Run_30Khz_1/"  # Change this to the root directory of your files
-    process_directory(root_directory)
+    # process_directory(root_directory)
+    generateMainCSV(root_directory)

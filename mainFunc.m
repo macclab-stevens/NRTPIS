@@ -248,7 +248,7 @@ simParameters.radar = [];
 simParameters.radar.prf = simParameters.prf; %Hz e.g. 1e3 = 1Khz = 1ms PRI
 simParameters.radar.FreqOffset = simParameters.PulseBWoffset;
 % simParameters.radar.PulseWidth = 60e-6;
-simParameters.radar.PulseWidth = simParameters.PulseWidth 
+simParameters.radar.PulseWidth = simParameters.PulseWidth; 
 % pw = simParameters.radar.PulseWidth * 10^(6)
 simParameters.radar.BW =  simParameters.PulseBW;
 % pulseSlotId = 1;
@@ -327,10 +327,11 @@ global pulON
 pulON = true;
 % pulse = [x';y];
 pulse = pulse_parts;
-if pulON
+if false
     spectrogram([x'; y],50,0,nfft1,fs,'centered','yaxis') ;
     spectrogram(pulse_parts{1},50,0,nfft1,fs,'centered','yaxis') ;
     spectrogram(pulse_parts{2},50,0,nfft1,fs,'centered','yaxis') ;
+    print("")
     % signalAnalyzer(pulse{1},'SampleRate',fs)
     % signalAnalyzer(pulse{1},'SampleRate',fs)
 
