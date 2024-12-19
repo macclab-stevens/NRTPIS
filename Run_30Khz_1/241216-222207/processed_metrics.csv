@@ -1,4 +1,4 @@
-RNTI,numDLTotal,numDLnew,numReTx_DL,avgMCS_DL,numULTotal,numULnew,numReTx_UL,avgMCS_UL,DL_throughput (bits),DL_goodput (bits),UL_throughput (bits),UL_goodput (bits),TTI,PulseBWoffset,numRBs,NumFrames,prf,FreqOffset,PulseWidth,BW,numPulses,pulseIdxOffset_ms
+RNTI,numDLTotal,numDLnew,numReTx_DL,avgMCS_DL,numULTotal,numULnew,numReTx_UL,avgMCS_UL,DL_throughput_bits,DL_goodput_bits,UL_throughput_bits,UL_goodput_bits,TTI,PulseBWoffset,numRBs,NumFrames,prf,FreqOffset,PulseWidth,BW,numPulses,pulseIdxOffset_ms
 1,116,42,74,19.74,42,15,27,16.05,38536,16008,20160,5952,4,0,51,5,5000,0,7e-05,20000000,1,0
 2,112,39,73,19.64,45,16,29,16.38,48880,15688,18616,5792,4,0,51,5,5000,0,7e-05,20000000,1,0
 3,111,39,72,19.02,37,14,23,18.0,41208,16088,20368,5728,4,0,51,5,5000,0,7e-05,20000000,1,0

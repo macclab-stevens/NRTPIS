@@ -206,10 +206,10 @@ def save_metrics_to_csv(metrics, radar_params, tti,PulseBWoffset,numRBs,NumFrame
             "numULnew": data["numULnew"],
             "numReTx_UL": data["numReTx_UL"],
             "avgMCS_UL": round(data["avgMCS_UL"], 2),
-            "DL_throughput (bits)": round(data["DL_throughput"], 2),
-            "DL_goodput (bits)": round(data["DL_goodput"], 2),
-            "UL_throughput (bits)": round(data["UL_throughput"], 2),
-            "UL_goodput (bits)": round(data["UL_goodput"], 2),
+            "DL_throughput_bits": round(data["DL_throughput"], 2),
+            "DL_goodput_bits": round(data["DL_goodput"], 2),
+            "UL_throughput_bits": round(data["UL_throughput"], 2),
+            "UL_goodput_bits": round(data["UL_goodput"], 2),
             "TTI": tti,
             'PulseBWoffset':PulseBWoffset,
             "numRBs":numRBs,
@@ -260,6 +260,13 @@ def generateMainCSV(root_dir):
                 print(df)
     print(df)
     df = df.drop(['numPulses','pulseIdxOffset_ms'],axis=1)
+    print(df.keys())
+    df['DL_throughput_bps'] = df.apply(lambda row: row['DL_throughput_bits'] / (row['NumFrames'] * 10e-3), axis=1)
+    df['DL_goodput_bps'] = df.apply(lambda row: row['DL_goodput_bits'] / (row['NumFrames'] * 10e-3), axis=1)
+    df['UL_throughput_bps'] = df.apply(lambda row: row['UL_throughput_bits'] / (row['NumFrames'] * 10e-3), axis=1)
+    df['UL_goodput_bps'] = df.apply(lambda row: row['UL_goodput_bits'] / (row['NumFrames'] * 10e-3), axis=1)
+
+    # df['DL_goodput_bps']
     df.to_csv(os.path.join(root_dir, '0_RunData.csv'))
     return 
 
